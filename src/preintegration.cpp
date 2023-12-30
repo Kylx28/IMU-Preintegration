@@ -118,7 +118,7 @@ class Preintegration{
                 covariance = (F * covariance * F.transpose()) + (G * noise * G.transpose());
 
                 //Jacobian Matrix
-                jacobian = F * jacobian; //inital jacobian is the identity matrix
+                jacobian = F * jacobian; //initial jacobian is the identity matrix
             }
         }
 
