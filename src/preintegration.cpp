@@ -2,15 +2,6 @@
 #include <vector>
 #include "parameters.cpp"
 
-/*
-Preintegration algorithm:
-Inputs - IMU acc and gyr measurements, dt, acceleration bias, gyroscope bias
-1. Propagation from frame k to k+1
-2. Update jacobian matrix
-3. Store values in vector
-4. If bias changes too much then repropagate, otherwise use first order approximation
-*/
-
 class Preintegration{
     private:
         //imu measurements, etc
