@@ -159,10 +159,33 @@ class Preintegration{
             }
         }
 
-        Eigen::Matrix<double, 15, 1>calc_residuals(const Eigen::Vector3d &Pi, const Eigen::Vector3d &Qi, const Eigen::Vector3d &Vi, const Eigen::Vector3d &Bai, const Eigen::Vector3d &Bgi,
-                                                  const Eigen::Vector3d &Pj, const Eigen::Vector3d &Qj, const Eigen::Vector3d &Vj, const Eigen::Vector3d &Baj, const Eigen::Vector3d &Bgj)
+        Eigen::Matrix<double, 15, 1>calc_residuals(const Eigen::Vector3d &Pi, const Eigen::Quaterniond &Qi, const Eigen::Vector3d &Vi, const Eigen::Vector3d &Bai, const Eigen::Vector3d &Bgi,
+                                                  const Eigen::Vector3d &Pj, const Eigen::Quaterniond &Qj, const Eigen::Vector3d &Vj, const Eigen::Vector3d &Baj, const Eigen::Vector3d &Bgj)
         {
             Eigen::Matrix<double, 15, 1> residuals;
+
+            Eigen::Matrix3d J_ba_p = jacobian.block<3,3>(O_P, O_BA);
+            Eigen::Matrix3d J_bw_p = jacobian.block<3,3>(O_P, O_BG);
+            Eigen::Matrix3d J_ba_v = jacobian.block<3,3>(O_V, O_BA);
+            Eigen::Matrix3d J_bw_v = jacobian.block<3,3>(O_V, O_BG);
+            Eigen::Matrix3d J_bw_q = jacobian.block<3,3>(O_R, O_BG);
+
+            Eigen::Vector3d d_ba = Bai - bias_a;
+            Eigen::Vector3d d_bw = Bgi - bias_g;
+
+            Eigen::Vector3d temp_vec = J_bw_q * d_bw;
+
             //Pre-integration term estimation
+            Eigen::Vector3d _delta_p = delta_p + J_ba_p * d_ba + J_bw_p * d_bw;
+            Eigen::Vector3d _delta_v = delta_v + J_ba_v * d_ba + J_bw_p * d_bw;
+            Eigen::Quaterniond _delta_q = delta_q * Eigen::Quaterniond(1, 0.5 * temp_vec(0), 0.5 * temp_vec(1), 0.5 * temp_vec(2));
+
+            residuals.block<3,1>(0, 0) = Qi.inverse() * (Pj - Pi + 0.5*(G * dt * dt) - (Vi * dt)) - _delta_p;
+            residuals.block<3,1>(3, 0) = Qi.inverse() * (Vj + (G * dt) - Vi) - _delta_v;
+            residuals.block<3,1>(6, 0) = (_delta_q.inverse() * Qi.inverse() * Qj).vec();  //vector part of quaternion
+            residuals.block<3,1>(9, 0) = Baj - Bai;
+            residuals.block<3,1>(12, 0) = Bgj - Bgi;
+
+            return residuals;
         }
 };
