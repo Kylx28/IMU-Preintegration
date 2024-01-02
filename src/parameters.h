@@ -22,7 +22,5 @@ constexpr double O_GW = 9;
 // Realistic gravity vector (approximate Earth's gravity)
 const Eigen::Vector3d G(0.0, 0.0, 9.81); // Assuming Earth's gravity is pointing downwards in the z-axis
 
-// You can uncomment this line if needed
-// void readParameters();
 
 #endif // PARAMETERS_H
