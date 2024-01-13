@@ -55,14 +55,16 @@ void Preintegration::eulerIntegration(double _dt, const Eigen::Vector3d &acc_0, 
         //Configure Matrix F (I + F * dt)
         Eigen::Matrix<double,15,15> F;
         F = Eigen::Matrix<double,15,15>::Zero();
-        //Row 1:
-        F.block<3,3>(3,0) = Eigen::Matrix3d::Identity();
-        //Row 2:
+        F.block<3,3>(0,0) = Eigen::Matrix3d::Identity();
+        F.block<3,3>(0,6) = Eigen::Matrix3d::Identity() * _dt;
+        F.block<3,3>(3,3) = Eigen::Matrix3d::Identity();
+        F.block<3,3>(3,6) = -1 * gyr_skew;
+        F.block<3,3>(3,12) = -1 * Eigen::Matrix3d::Identity() * _dt;
         F.block<3,3>(6,3) = -1 * rotationMatrix * acc_skew;
-        F.block<3,3>(9,3) = -1 * rotationMatrix;
-        //Row 3:
-        F.block<3,3>(6,6) = -1 * gyr_skew;
-        F.block<3,3>(12,6) = -1 * Eigen::Matrix3d::Identity();
+        F.block<3,3>(6,6) = Eigen::Matrix3d::Identity();
+        F.block<3,3>(6,9) = -1 * rotationMatrix * _dt;
+        F.block<3,3>(9,9) = Eigen::Matrix3d::Identity();
+        F.block<3,3>(12,12) = Eigen::Matrix3d::Identity();
 
 
         F = (Eigen::Matrix<double, 15, 15>::Identity() + (F * _dt));
@@ -70,14 +72,10 @@ void Preintegration::eulerIntegration(double _dt, const Eigen::Vector3d &acc_0, 
         //Configure Matrix G (G * dt)
         Eigen::Matrix<double, 15, 12> G;
         G = Eigen::Matrix<double, 15, 12>::Zero();
-        //Row 2 
-        G.block<3,3>(3,0) = -1 * rotationMatrix;
-        //Row 3
-        G.block<3,3>(6,3) = -1 * Eigen::Matrix3d::Identity();
-        //Row 4
-        G.block<3,3>(9,6) = Eigen::Matrix3d::Identity();
-        //Row 5
-        G.block<3,3>(12,9) = Eigen::Matrix3d::Identity();
+        G.block<3,3>(3,9) = -1 * Eigen::Matrix3d::Identity() * _dt;
+        G.block<3,3>(6,0) = -1 * rotationMatrix * _dt;
+        G.block<3,3>(6,9) = Eigen::Matrix3d::Identity() * _dt;
+        G.block<3,3>(12,9) = Eigen::Matrix3d::Identity() * _dt;
 
         //Covariance Matrix
         covariance = (F * covariance * F.transpose()) + (G * noise * G.transpose());
