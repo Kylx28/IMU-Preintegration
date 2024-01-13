@@ -19,8 +19,6 @@ Preintegration::Preintegration(const Eigen::Vector3d &acc_0, const Eigen::Vector
     //Noise initalization
     noise = Eigen::Matrix<double, 12, 12>::Zero();
     noise.block<3,3>(0,0) = (ACC_N * ACC_N) * Eigen::Matrix3d::Identity();
-    // noise.block<3,3>(3,3) = (GYR_N * GYR_N) * Eigen::Matrix3d::Identity();
-    // noise.block<3,3>(6,6) = (ACC_N * ACC_N) * Eigen::Matrix3d::Identity();
     noise.block<3,3>(3,3) = (GYR_N * GYR_N) * Eigen::Matrix3d::Identity();
     noise.block<3,3>(6,6) = (ACC_W * ACC_W) * Eigen::Matrix3d::Identity();
     noise.block<3,3>(9, 9) = (GYR_W * GYR_W) * Eigen::Matrix3d::Identity();
