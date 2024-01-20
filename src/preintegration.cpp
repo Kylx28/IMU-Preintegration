@@ -50,15 +50,16 @@ void Preintegration::eulerIntegration(double _dt, const Eigen::Vector3d &acc_0, 
                     temp_gyr(2), 0, -1 * temp_gyr(0),
                     -1 * temp_gyr(1), temp_gyr(0), 0;
 
-        //Configure Matrix F (I + F * dt)
+        //Configure Matrix F
         Eigen::Matrix<double,15,15> F;
         F = Eigen::Matrix<double,15,15>::Zero();
         F.block<3,3>(0,0) = Eigen::Matrix3d::Identity();
+        F.block<3,3>(0,3) = -0.5 * rotationMatrix * acc_skew * _dt;
         F.block<3,3>(0,6) = Eigen::Matrix3d::Identity() * _dt;
-        F.block<3,3>(3,3) = Eigen::Matrix3d::Identity();
-        F.block<3,3>(3,6) = -1 * gyr_skew;
+        F.block<3,3>(0,9) = -0.5 * gyr_skew * _dt * _dt;
+        F.block<3,3>(3,3) = Eigen::Matrix3d::Identity() - gyr_skew * _dt;
         F.block<3,3>(3,12) = -1 * Eigen::Matrix3d::Identity() * _dt;
-        F.block<3,3>(6,3) = -1 * rotationMatrix * acc_skew;
+        F.block<3,3>(6,3) = -1 * rotationMatrix * acc_skew * _dt;
         F.block<3,3>(6,6) = Eigen::Matrix3d::Identity();
         F.block<3,3>(6,9) = -1 * rotationMatrix * _dt;
         F.block<3,3>(9,9) = Eigen::Matrix3d::Identity();
@@ -67,13 +68,14 @@ void Preintegration::eulerIntegration(double _dt, const Eigen::Vector3d &acc_0, 
 
         F = (Eigen::Matrix<double, 15, 15>::Identity() + (F * _dt));
 
-        //Configure Matrix G (G * dt)
+        //Configure Matrix G
         Eigen::Matrix<double, 15, 12> G;
         G = Eigen::Matrix<double, 15, 12>::Zero();
-        G.block<3,3>(3,9) = -1 * Eigen::Matrix3d::Identity() * _dt;
-        G.block<3,3>(6,0) = -1 * rotationMatrix * _dt;
-        G.block<3,3>(6,9) = Eigen::Matrix3d::Identity() * _dt;
-        G.block<3,3>(12,9) = Eigen::Matrix3d::Identity() * _dt;
+        G.block<3,3>(0,0) = -0.5 * rotationMatrix * _dt * _dt;
+        G.block<3,3>(3,3) = Eigen::Matrix3d::Identity();
+        G.block<3,3>(6,0) = rotationMatrix;
+        G.block<3,3>(9,6) = Eigen::Matrix3d::Identity();
+        G.block<3,3>(12,12) = Eigen::Matrix3d::Identity();
 
         //Covariance Matrix
         covariance = (F * covariance * F.transpose()) + (G * noise * G.transpose());
